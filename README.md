@@ -1,0 +1,2 @@
+# Image Plot Digitizer
+### This tool allows you to digitize image plots from a screenshot. This allows for quantitative analysis and comparison of image plots in published literature. This tool is built off matplotlib and can easily accomodate any mpl colormaps as well as custom user defined colormaps. Axes mapping tool and image cropping can also be taken care of. Note: this can currently only accomodate image plots with orthogonal axes that are aligned to the rows and columns of the screenshot (no askew plots).
