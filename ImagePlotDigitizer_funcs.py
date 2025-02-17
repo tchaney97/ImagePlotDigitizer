@@ -119,6 +119,52 @@ def generate_y_axis_map(tuple1, tuple2, img, log=False):
 
     return y_axis_array
 
+def generate_arb_x_axis_map(indices, coordinates, img):
+    """
+    Generate a 1-D x-axis array mapping each pixel index to x-axis coordinate value: 
+    - For nonlinear, arbitrarily spaced axes
+
+    Args:
+    - indices: list of x-axis column numbers to extract
+    - coordinates: corresponding list of x-axis values at the specified column numbers (order matters)
+    - img: image array of values
+    """
+
+    # Generate full x-axis based on linear spacing
+    spacing = (coordinates[-1]-coordinates[0])/(indices[-1]-indices[0])
+    start_x = coordinates[0]-(indices[0]*spacing)
+    stop_x = coordinates[0]+((img.shape[1]-indices[0])*spacing)
+    x_axis_array = np.linspace(start_x, stop_x, img.shape[1])
+    
+    # Overwrite with linearly spaced segments between specificed indices & coordinates:
+    for (col1, col2), (x1, x2) in zip(zip(indices[:-1], indices[1:]), zip(coordinates[:-1], coordinates[1:])):
+        x_axis_array[col1:col2+1] = np.linspace(x1, x2, num=(col2-col1)+1)   
+
+    return x_axis_array
+
+def generate_arb_y_axis_map(indices, coordinates, img):
+    """
+    Generate a 1-D y-axis array mapping each pixel index to x-axis coordinate value: 
+    - For nonlinear, arbitrarily spaced axes
+
+    Args:
+    - indices: list of y-axis column numbers to extract
+    - coordinates: corresponding list of y-axis values at the specified column numbers (order matters)
+    - img: image array of values
+    """
+
+    # Generate full x-axis based on linear spacing
+    spacing = (coordinates[-1]-coordinates[0])/(indices[-1]-indices[0])
+    start_y = coordinates[0]-(indices[0]*spacing)
+    stop_y = coordinates[0]+((img.shape[0]-indices[0])*spacing)
+    y_axis_array = np.linspace(start_y, stop_y, img.shape[0])
+    
+    # Overwrite with linearly spaced segments between specificed indices & coordinates:
+    for (row1, row2), (y1, y2) in zip(zip(indices[:-1], indices[1:]), zip(coordinates[:-1], coordinates[1:])):
+        y_axis_array[row1:row2+1] = np.linspace(y1, y2, num=(row2-row1)+1)   
+
+    return y_axis_array
+
 def crop_image(img, x_vals, y_vals, x_axis, y_axis):
     """
     Crops image based on defined x and y values.
