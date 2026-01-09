@@ -50,6 +50,9 @@ def colormap_from_image_line(img_rgb, index, start, stop, width=1, normalize=Tru
             stop=w
         else:
             stop=h
+    if stop < start:
+        stop, start = start, stop
+        flip = not flip
             
 
     # slice out the line of pixels
@@ -79,7 +82,7 @@ def colormap_from_image_line(img_rgb, index, start, stop, width=1, normalize=Tru
 
     return cmap
     
-def color_to_value(img_rgb, colormap, min_val=1, max_val=1e3, num_samples=256, log=True):
+def color_to_value(img_rgb, colormap, min_val=1, max_val=1e3, num_samples=256, log=False):
     """
     Map a given color to a data value based on the provided colormap.
 
@@ -127,29 +130,33 @@ def generate_x_axis_map(tuple1, tuple2, img, log=False):
     - tuple2: A tuple (col2, x2) where col2 is a column number and x2 is the corresponding x-axis value.
     - img: image array of values
     - log: A flag indicating whether the x-axis is logarithmic (True) or linear (False).
+           Can also specify an arbitrary log base as an integer. Default log base for "True" is 10
 
     Returns:
     - x_axis_array: A 1D array mapping each pixel column to x-axis values.
     """
     col1, x1 = tuple1
     col2, x2 = tuple2
-    num_columns = img.shape[1]
+    num_cols = img.shape[1]
+    idx = np.arange(num_cols, dtype=float)
 
     if log:
         # Logarithmic scale interpolation
-        log_x1 = np.log10(x1)
-        log_x2 = np.log10(x2)
-        spacing = (log_x2-log_x1)/(col2-col1)
-        start_x = x1-(col1*spacing)
-        stop_x = x1+((num_columns-col1)*spacing)
-        log_x_axis_array = np.linspace(start_x, stop_x, num_columns)
-        x_axis_array = np.power(10, log_x_axis_array)
+        base = 10.0 if isinstance(log, bool) else float(log)
+        if base <= 0 or base == 1:
+            raise ValueError("Log base must be > 0 and != 1.")
+        if x1 <= 0 or x2 <= 0:
+            raise ValueError("Log scaling requires positive x values.")
+
+        log_x1 = np.log(x1)/np.log(base)
+        log_x2 = np.log(x2)/np.log(base)
+        slope = (log_x2-log_x1)/(col2-col1)
+        log_x = log_x1 + (slope*(idx-col1))
+        x_axis_array = np.power(base, log_x)
     else:
-        # Linear scale interpolation
-        spacing = (x2-x1)/(col2-col1)
-        start_x = x1-(col1*spacing)
-        stop_x = x1+((num_columns-col1)*spacing)
-        x_axis_array = np.linspace(start_x, stop_x, num_columns)
+       # Linear scale interpolation
+        slope = (x2-x1)/(col2-col1)
+        x_axis_array = x1 + (slope*(idx - col1))
 
     return x_axis_array
 
@@ -161,7 +168,8 @@ def generate_y_axis_map(tuple1, tuple2, img, log=False):
     - tuple1: A tuple (row1, y1) where row1 is a column number and y1 is the corresponding y-axis value.
     - tuple2: A tuple (row2, y2) where row2 is a column number and y2 is the corresponding y-axis value.
     - img: image array of values
-    - log: A flag indicating whether the y-axis is logarithmic (True) or linear (False).
+    - log: A flag indicating whether the y-axis is logarithmic (True) or linear (False). 
+           Can also specify an arbitrary log base as an integer. Default log base for "True" is 10
 
     Returns:
     - y_axis_array: A 1D array mapping each pixel row to y-axis values.
@@ -169,22 +177,25 @@ def generate_y_axis_map(tuple1, tuple2, img, log=False):
     row1, y1 = tuple1
     row2, y2 = tuple2
     num_rows = img.shape[0]
+    idx = np.arange(num_rows, dtype=float)
 
     if log:
         # Logarithmic scale interpolation
-        log_y1 = np.log10(y1)
-        log_y2 = np.log10(y2)
-        spacing = (log_y2-log_y1)/(row2-row1)
-        start_y = y1-(row1*spacing)
-        stop_y = y1+((num_rows-row1)*spacing)
-        log_y_axis_array = np.linspace(start_y, stop_y, num_rows)
-        y_axis_array = np.power(10, log_y_axis_array)
+        base = 10.0 if isinstance(log, bool) else float(log)
+        if base <= 0 or base == 1:
+            raise ValueError("Log base must be > 0 and != 1.")
+        if y1 <= 0 or y2 <= 0:
+            raise ValueError("Log scaling requires positive x values.")
+
+        log_y1 = np.log(y1)/np.log(base)
+        log_y2 = np.log(y2)/np.log(base)
+        slope = (log_y2-log_y1)/(row2-row1)
+        log_y = log_y1 + (slope*(idx-row1))
+        y_axis_array = np.power(base, log_y)
     else:
-        # Linear scale interpolation
-        spacing = (y2-y1)/(row2-row1)
-        start_y = y1-(row1*spacing)
-        stop_y = y1+((num_rows-row1)*spacing)
-        y_axis_array = np.linspace(start_y, stop_y, num_rows)
+       # Linear scale interpolation
+        slope = (y2-y1)/(row2-row1)
+        y_axis_array = y1 + (slope*(idx - row1))
 
     return y_axis_array
 
